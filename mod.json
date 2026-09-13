@@ -1,0 +1,42 @@
+{
+    "geode": "5.10.0",
+    "gd": {
+        "win": "2.2081",
+        "android": "2.2081",
+        "mac": "2.2081",
+        "ios": "2.2081"
+    },
+    "id": "cubicstudios.saboteur",
+    "name": "Saboteur",
+    "version": "1.0.0-alpha.1",
+    "developers": [
+        "Team Breakeode",
+        "Cheeseworks"
+    ],
+    "description": "Spice up your gameplay with friends!",
+    "links": {
+        "source": "https://github.com/CubicCommunity/Saboteur",
+        "homepage": "https://breakeode.cubicstudios.xyz/",
+        "community": "https://www.dsc.gg/cubic"
+    },
+    "tags": [
+        "joke",
+        "online",
+        "cheat",
+        "gameplay",
+        "content"
+    ],
+    "dependencies": {
+        "cubicstudios.horriblemenu": ">=1.1.0",
+        "dankmeme.globed2": ">=2.2.0"
+    },
+    "settings": {
+        "sync-all": {
+            "type": "bool",
+            "name": "Sync all Horrible Menu options",
+            "description": "Automatically synchronize all [Horrible Menu](mod:cubicstudios.horriblemenu) options with the rest of your [Globed](mod:dankmeme.globed2) room. <co>Network load may be significantly heavier</c>.",
+            "default": false
+        }
+    },
+    "early-load": false
+}
