@@ -11,17 +11,19 @@
 
 namespace cs::brkd::saboteur {
     struct RoomOptionToggleEvent final : globed::ServerEvent<RoomOptionToggleEvent, globed::EventServer::Game> {
-        static constexpr auto Id = "room-option-toggle-event"_spr;
+        static constexpr auto Id = "option-toggle-ev"_spr;
 
-        int playerId = 0;
+        uint32_t room = 0;
         std::string option;
         bool on = false;
 
-        RoomOptionToggleEvent(int id = 0) : playerId(id) {};
+        RoomOptionToggleEvent(int id = 0, std::string option = "", bool on = false) : room(id), option(std::move(option)), on(on) {};
 
         std::vector<uint8_t> encode() const {
             dbuf::ByteWriter wr;
-            wr.writeI32(playerId);
+            wr.writeU32(room);
+            wr.writeStringVar(option);
+            wr.writeBool(on);
 
             return std::move(wr).intoInner();
         };
@@ -30,7 +32,9 @@ namespace cs::brkd::saboteur {
             dbuf::ByteReader reader{data};
             RoomOptionToggleEvent out{};
 
-            GEODE_UNWRAP_INTO(out.playerId, reader.readI32());
+            GEODE_UNWRAP_INTO(out.room, reader.readU32());
+            GEODE_UNWRAP_INTO(out.option, reader.readStringVar());
+            GEODE_UNWRAP_INTO(out.on, reader.readBool());
 
             return Ok(std::move(out));
         };

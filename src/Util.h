@@ -2,7 +2,8 @@
 
 #include <horrible/API.h>
 
-#include <util/Events.hpp>
+#include <util/Include.h>
+#include <util/Macros.h>
 
 #include <Geode/Geode.hpp>
 
