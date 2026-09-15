@@ -10,33 +10,16 @@
 #include <Geode/Geode.hpp>
 
 namespace cs::brkd::saboteur {
-    struct RoomOptionToggleEvent final : globed::ServerEvent<RoomOptionToggleEvent, globed::EventServer::Game> {
-        static constexpr auto Id = "option-toggle-ev"_spr;
+    struct RoomOptionSyncEvent final : globed::ServerEvent<RoomOptionSyncEvent, globed::EventServer::Game> {
+        static constexpr auto Id = "option-sync-ev"_spr;
 
-        uint32_t room = 0;
-        std::string option;
-        bool on = false;
+        int32_t levelId = 0;
+        std::unordered_map<uint64_t, bool> options;
 
-        RoomOptionToggleEvent(int id = 0, std::string option = "", bool on = false) : room(id), option(std::move(option)), on(on) {};
+        RoomOptionSyncEvent(int32_t levelId = 0, std::unordered_map<uint64_t, bool> options = {}) :
+            levelId(levelId), options(std::move(options)) {};
 
-        std::vector<uint8_t> encode() const {
-            dbuf::ByteWriter wr;
-            wr.writeU32(room);
-            wr.writeStringVar(option);
-            wr.writeBool(on);
-
-            return std::move(wr).intoInner();
-        };
-
-        static geode::Result<RoomOptionToggleEvent> decode(std::span<const uint8_t> data) {
-            dbuf::ByteReader reader{data};
-            RoomOptionToggleEvent out{};
-
-            GEODE_UNWRAP_INTO(out.room, reader.readU32());
-            GEODE_UNWRAP_INTO(out.option, reader.readStringVar());
-            GEODE_UNWRAP_INTO(out.on, reader.readBool());
-
-            return Ok(std::move(out));
-        };
+        std::vector<uint8_t> encode() const;
+        static geode::Result<RoomOptionSyncEvent> decode(std::span<const uint8_t> data);
     };
 };

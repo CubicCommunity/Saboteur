@@ -27,7 +27,7 @@
         "content"
     ],
     "dependencies": {
-        "cubicstudios.horriblemenu": ">=1.1.0",
+        "cubicstudios.horriblemenu": ">=1.4.0",
         "dankmeme.globed2": ">=2.2.0"
     },
     "settings": {

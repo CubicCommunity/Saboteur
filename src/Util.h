@@ -2,6 +2,8 @@
 
 #include <horrible/API.h>
 
+#include <cue/Util.hpp>
+
 #include <util/Include.h>
 #include <util/Macros.h>
 
