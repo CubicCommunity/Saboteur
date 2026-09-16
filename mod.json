@@ -27,14 +27,14 @@
         "content"
     ],
     "dependencies": {
-        "cubicstudios.horriblemenu": ">=1.4.0",
+        "cubicstudios.horriblemenu": ">=1.4.0-prerelease",
         "dankmeme.globed2": ">=2.2.0"
     },
     "settings": {
         "sync-all": {
             "type": "bool",
             "name": "Sync all Horrible Menu options",
-            "description": "Automatically synchronize all [Horrible Menu](mod:cubicstudios.horriblemenu) options with the rest of your [Globed](mod:dankmeme.globed2) room. <co>Network load may be significantly heavier</c>.",
+            "description": "<cd>[Supporter-only](https://ko-fi.com/breakeode) perk!</c> Automatically synchronize all [Horrible Menu](mod:cubicstudios.horriblemenu) options with the rest of your [Globed](mod:dankmeme.globed2) room. <co>Network load may be significantly heavier</c>.",
             "default": false
         }
     },

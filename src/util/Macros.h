@@ -17,3 +17,9 @@
     $on_mod(Loaded) {                            \
         SBT_MODIFY_EVENT_HANDLER(Base, Derived); \
     }
+
+#define SBT_REGISTER_OPTION(opt)                                                            \
+    $on_mod(Loaded) {                                                                       \
+        if (auto om = horrible::OptionManager::get()) om->registerOption(opt);              \
+        if (auto sd = cs::brkd::saboteur::options::SelfDirector::get()) sd->setOption(opt); \
+    }

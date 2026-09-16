@@ -8,7 +8,7 @@ using namespace geode::prelude;
 using namespace cs::brkd::saboteur;
 
 bool options::isValidForMp(ZStringView id) {
-    return mod->getSettingValue<bool>("sync-all") || str::startsWith(id, ""_spr);
+    return (horrible::isSupporter() && mod->getSettingValue<bool>("sync-all")) || str::startsWith(id, ""_spr);
 };
 
 options::SelfDirector::SelfDirector() {

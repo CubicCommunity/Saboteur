@@ -14,4 +14,4 @@ static auto const o = Option::create(THIS_ID)
                           ->setDescription("Occassionally be prompted vote on someone to briefly annoy while playing a level.\n<co>3+ Players Required</c>\n<cl>created by Cheeseworks</c>")
                           ->setCategory(SBT_CATEGORY)
                           ->setSillyTier(SillyTier::Medium);
-HORRIBLE_REGISTER_OPTION(o);
+SBT_REGISTER_OPTION(o);
