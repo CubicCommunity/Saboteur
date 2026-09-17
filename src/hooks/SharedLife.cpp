@@ -11,7 +11,7 @@ using namespace cs::brkd::saboteur;
 
 static auto const o = Option::create(THIS_ID)
                           ->setName("Shared Lifeline")
-                          ->setDescription("Someone starts with a hot potato and must keep passing it to other people to avoid dying. Whoever receives the hot potato cannot hand it back to the same person they received it from.\n<co>3+ Players Required</c>\n<cl>created by Cheeseworks</c>")
+                          ->setDescription("Everyone starts off with a shared health meter. If anyone hits an obstacle, everyone takes damage and the meter decreases for everyone, and if it reaches 0, everyone in the level dies.\n<co>2+ Players Required</c>\n<cl>created by Cheeseworks</c>")
                           ->setCategory(SBT_CATEGORY)
                           ->setSillyTier(SillyTier::High);
 SBT_REGISTER_OPTION(o);

@@ -7,7 +7,7 @@
 using namespace geode::prelude;
 using namespace cs::brkd::saboteur;
 
-std::vector<uint8_t> RoomOptionSyncEvent::encode() const {
+std::vector<uint8_t> events::RoomOptionSync::encode() const {
     dbuf::ByteWriter wr;
     wr.writeI32(levelId);
     wr.writeU64(options.size());
@@ -20,14 +20,14 @@ std::vector<uint8_t> RoomOptionSyncEvent::encode() const {
     return std::move(wr).intoInner();
 };
 
-Result<RoomOptionSyncEvent> RoomOptionSyncEvent::decode(std::span<const uint8_t> data) {
+Result<events::RoomOptionSync> events::RoomOptionSync::decode(std::span<const uint8_t> data) {
     dbuf::ByteReader reader{data};
-    RoomOptionSyncEvent out{};
+    events::RoomOptionSync out{};
 
     GEODE_UNWRAP_INTO(out.levelId, reader.readI32());
     GEODE_UNWRAP_INTO(size_t size, reader.readU64());
 
-    options::OptionMap opts;
+    options::HashedMap opts;
 
     if (size > 0) {
         opts.reserve(size);

@@ -11,6 +11,10 @@
 using namespace geode::prelude;
 using namespace cs::brkd::saboteur;
 
+$execute {
+    auto& core = modules::Core::get();
+};
+
 class $modify(SbtHookPlayLayer, PlayLayer) {
     struct Fields final {
         ListenerHandle toggles;
@@ -18,7 +22,7 @@ class $modify(SbtHookPlayLayer, PlayLayer) {
         ListenerHandle sync;
         ListenerHandle menu;
 
-        options::OptionMap previousStates;
+        options::HashedMap previousStates;
 
         ~Fields() {
             if (globed::api::room::isOwner()) {
@@ -62,7 +66,7 @@ class $modify(SbtHookPlayLayer, PlayLayer) {
                 log::debug("Not communicating multiplayer option states for level {}: only {} player(s)", m_level->m_levelID, globed::api::game::getPlayerCount());
             };
 
-            f->sync = RoomOptionSyncEvent::listen([this](RoomOptionSyncEvent const& ev, globed::EventOptions const& opts) {
+            f->sync = events::RoomOptionSync::listen([this](events::RoomOptionSync const& ev, globed::EventOptions const& opts) {
                 if (ev.levelId != m_level->m_levelID) {
                     log::trace("Ignoring option sync request for level {} while playing level {}", ev.levelId, m_level->m_levelID);
                     return;
@@ -74,14 +78,14 @@ class $modify(SbtHookPlayLayer, PlayLayer) {
                 };
 
                 if (auto sd = options::SelfDirector::get()) {
-                    options::OptionMap list;
+                    options::HashedMap list;
                     for (auto const& [id, opt] : sd->getSaboteurOptions()) list[id] = opt->isEnabled();
 
                     auto evOpts = globed::EventOptions{};
                     evOpts.targetPlayers = {opts.sender};
 
                     log::info("Responding with {} Saboteur option states for level {}", list.size(), ev.levelId);
-                    RoomOptionSyncEvent(m_level->m_levelID, std::move(list)).send(std::move(evOpts));
+                    events::RoomOptionSync(m_level->m_levelID, std::move(list)).send(std::move(evOpts));
                 } else {
                     log::error("Could not respond to option sync request for level {}: SelfDirector unavailable", ev.levelId);
                 };
@@ -99,7 +103,7 @@ class $modify(SbtHookPlayLayer, PlayLayer) {
                 };
             });
         } else {
-            f->sync = RoomOptionSyncEvent::listen([this, f](RoomOptionSyncEvent const& ev, globed::EventOptions const& opts) {
+            f->sync = events::RoomOptionSync::listen([this, f](events::RoomOptionSync const& ev, globed::EventOptions const& opts) {
                 if (opts.sender != globed::api::room::getOwner()) {
                     log::trace("Ignoring option sync event for level {} from a non-owner sender", ev.levelId);
                     return;
@@ -136,7 +140,7 @@ class $modify(SbtHookPlayLayer, PlayLayer) {
             evOpts.targetPlayers = {globed::api::room::getOwner()};
 
             log::info("Requesting synchronized option states for level {} from the room owner", m_level->m_levelID);
-            RoomOptionSyncEvent(m_level->m_levelID).send(std::move(evOpts));
+            events::RoomOptionSync(m_level->m_levelID).send(std::move(evOpts));
         };
     };
 
@@ -173,11 +177,11 @@ class $modify(SbtHookPlayLayer, PlayLayer) {
             if (p != globed::api::room::getOwner()) evOpts.targetPlayers.push_back(p);
         };
 
-        options::OptionMap list;
+        options::HashedMap list;
 
         for (auto const& [id, opt] : options::SelfDirector::get()->getSaboteurOptions()) list[id] = opt->isEnabled();
 
         log::info("Syncing {} Saboteur option states for all players in level {}", list.size(), m_level->m_levelID);
-        RoomOptionSyncEvent(m_level->m_levelID, std::move(list)).send(std::move(evOpts));
+        events::RoomOptionSync(m_level->m_levelID, std::move(list)).send(std::move(evOpts));
     };
 };

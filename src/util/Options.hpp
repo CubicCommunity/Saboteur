@@ -10,7 +10,7 @@ namespace cs::brkd::saboteur {
     namespace options {
         bool isValidForMp(geode::ZStringView id);
 
-        using OptionMap = std::unordered_map<uint64_t, bool>;
+        using HashedMap = std::unordered_map<uint64_t, bool>;
 
         class SelfDirector final : public base::Singleton<SelfDirector> {
         private:
