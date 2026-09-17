@@ -18,7 +18,6 @@
 namespace cs::brkd::saboteur {
     using namespace ::horrible;
 
-    // Pointer reference to the current mod instance
     inline geode::Mod* mod = geode::Mod::get();
 
     /**

@@ -2,7 +2,7 @@
 
 #include <util/base/Singleton.hpp>
 
-#include <horrible/Option.hpp>
+#include <horrible/API.h>
 
 #include <Geode/utils/ZStringView.hpp>
 
@@ -10,20 +10,20 @@ namespace cs::brkd::saboteur {
     namespace options {
         bool isValidForMp(geode::ZStringView id);
 
-        using HashedMap = std::unordered_map<uint64_t, bool>;
+        using HashedMap = horrible::HashedMapU64<bool>;
 
         class SelfDirector final : public base::Singleton<SelfDirector> {
         private:
-            std::unordered_map<uint64_t, std::shared_ptr<horrible::Option>> m_sbtOpts;
-            std::vector<std::shared_ptr<horrible::Option>> m_opts;
+            horrible::HashedMapU64<horrible::SharedOption> m_sbtOpts;
+            std::vector<horrible::SharedOption> m_opts;
 
         public:
             SelfDirector();
 
-            void setOption(std::shared_ptr<horrible::Option> option);
+            void setOption(horrible::SharedOption option);
 
-            std::span<const std::shared_ptr<horrible::Option>> getOptions() const noexcept;
-            std::unordered_map<uint64_t, std::shared_ptr<horrible::Option>> const& getSaboteurOptions() const noexcept;
+            std::span<const horrible::SharedOption> getOptions() const noexcept;
+            horrible::HashedMapU64<horrible::SharedOption> const& getSaboteurOptions() const noexcept;
         };
     };
 };

@@ -9,7 +9,7 @@
 #define SBT_MODIFY_EVENT_HANDLER(Base, Derived)                                                                           \
     horrible::listenForHorribleOptionChanges(                                                                             \
         THIS_ID,                                                                                                          \
-        [](HorribleOptionSave data) {                                                                                     \
+        [](horrible::OptionSave data) {                                                                                   \
             if (auto b = Base::get()) geode::cast::modify_cast<Derived*>(b)->SBT_SETUP_INTERFACE_FUNC_NAME(data.enabled); \
         })
 
