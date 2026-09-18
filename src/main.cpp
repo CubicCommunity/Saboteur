@@ -19,7 +19,7 @@ $execute {
 
 namespace cs::brkd::saboteur {
     namespace main {
-        static std::vector<std::weak_ptr<Hook>> g_syncHooks;
+        static std::vector<std::shared_ptr<Hook>> g_syncHooks;
 
         namespace hooks {
             static void setup(auto& self) {
@@ -39,18 +39,16 @@ namespace cs::brkd::saboteur {
             };
 
             static void toggle(bool on) {
-                for (auto const& hook : main::g_syncHooks) {
-                    if (auto h = hook.lock()) (void)h->toggle(on);
-                };
+                for (auto const& h : main::g_syncHooks) (void)h->toggle(on);
             };
         };
 
         static void restoreOptions(options::HashedMap const& previousStates) {
             if (previousStates.empty()) return;  // idk
 
-            log::debug("Restoring {} previous Horrible Menu option states", previousStates.size());
+            log::warn("Restoring {} previous Horrible Menu option states", previousStates.size());
             for (auto const& [id, on] : previousStates) {
-                if (auto om = OptionManager::get()) om->toggleOption(id, on);
+                OptionManager::get()->toggleOption(id, on);
             };
         };
     };
@@ -117,18 +115,14 @@ class $modify(SbtHookPlayLayer, PlayLayer) {
                     return;
                 };
 
-                if (auto sd = options::SelfDirector::get()) {
-                    options::HashedMap list;
-                    for (auto const& [id, opt] : sd->getSaboteurOptions()) list[id] = opt->isEnabled();
+                options::HashedMap list;
+                for (auto const& [id, opt] : options::SelfDirector::get()->getSaboteurOptions()) list[id] = opt->isEnabled();
 
-                    auto evOpts = globed::EventOptions{};
-                    evOpts.targetPlayers = {opts.sender};
+                auto evOpts = globed::EventOptions{};
+                evOpts.targetPlayers = {opts.sender};
 
-                    log::info("Responding with {} Saboteur option states for level {}", list.size(), ev.levelId);
-                    events::RoomOptionSync(m_level->m_levelID, std::move(list)).send(std::move(evOpts));
-                } else {
-                    log::error("Could not respond to option sync request for level {}: SelfDirector unavailable", ev.levelId);
-                };
+                log::info("Responding with {} Saboteur option states for level {}", list.size(), ev.levelId);
+                events::RoomOptionSync(m_level->m_levelID, std::move(list)).send(std::move(evOpts));
             });
 
             log::debug("Listening for multiplayer option sync requests as owner for level {}", m_level->m_levelID);
@@ -156,12 +150,8 @@ class $modify(SbtHookPlayLayer, PlayLayer) {
 
                 if (f->previousStates.empty()) savePreviousStates(m_level->m_levelID);
 
-                if (auto om = OptionManager::get()) {
-                    log::info("Applying {} synchronized option states for level {}", ev.options.size(), ev.levelId);
-                    for (auto const& [id, on] : ev.options) om->toggleOption(id, on);
-                } else {
-                    log::error("Could not apply synchronized option states for level {}: OptionManager unavailable", ev.levelId);
-                };
+                log::info("Applying {} synchronized option states for level {}", ev.options.size(), ev.levelId);
+                for (auto const& [id, on] : ev.options) OptionManager::get()->toggleOption(id, on);
             });
 
             log::debug("Listening for multiplayer option sync events as client for level {}", m_level->m_levelID);
@@ -190,14 +180,12 @@ class $modify(SbtHookPlayLayer, PlayLayer) {
     };
 
     void savePreviousStates(int levelId) {
-        if (auto sd = options::SelfDirector::get()) {
-            log::debug("Saving and disabling {} local Saboteur option states for level {}", sd->getOptions().size(), levelId);
-            for (auto const& opt : sd->getOptions()) {
-                m_fields->previousStates[opt->getIDHash()] = opt->isEnabled();
-                opt->disable();
-            };
-        } else {
-            log::error("Could not disable local Saboteur options for level {}: SelfDirector unavailable", levelId);
+        auto sd = options::SelfDirector::get();
+
+        log::debug("Saving and disabling {} local Saboteur option states for level {}", sd->getOptions().size(), levelId);
+        for (auto const& opt : sd->getOptions()) {
+            m_fields->previousStates[opt->getIDHash()] = opt->isEnabled();
+            opt->disable();
         };
     };
 
@@ -220,7 +208,7 @@ class $modify(SbtHookPlayLayer, PlayLayer) {
     };
 };
 
-$on_mod(Loaded) {
+$on_game(ModsLoaded) {
     main::hooks::toggle(false);
 
     events::RoomJoin()

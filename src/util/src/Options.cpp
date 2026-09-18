@@ -2,6 +2,8 @@
 
 #include <Util.h>
 
+#include <ranges>
+
 #include <Geode/Geode.hpp>
 
 using namespace geode::prelude;
@@ -23,7 +25,7 @@ options::SelfDirector::SelfDirector() {
     auto list = OptionManager::get()->getAllOptions();
     m_opts.reserve(list.size());
 
-    for (auto const& [id, o] : list) m_opts.push_back(o);
+    for (auto const& o : list | std::views::values) m_opts.push_back(o);
 
     m_opts.shrink_to_fit();
 };
