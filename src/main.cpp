@@ -1,5 +1,7 @@
 #include <Util.h>
 
+#include <ranges>
+
 #include <globed/prelude.hpp>
 
 #include <globed/soft-link/Table.hpp>
@@ -17,6 +19,32 @@ $execute {
 
 namespace cs::brkd::saboteur {
     namespace main {
+        static std::vector<std::weak_ptr<Hook>> g_syncHooks;
+
+        namespace hooks {
+            static void setup(auto& self) {
+                StringMap<std::shared_ptr<Hook>> const& hooks = self.m_hooks;
+
+                auto loader = Loader::get();
+                auto enable = loader->isModLoaded("geode.node-ids") && !loader->isModLoaded("dasshu.badgified");
+
+                for (auto& hook : hooks | std::views::values) {
+                    hook->setAutoEnable(enable);
+                    (void)hook->toggle(enable);
+
+                    (void)self.setHookPriorityPre(hook->getDisplayName(), Priority::VeryEarlyPre);
+
+                    g_syncHooks.push_back(hook);
+                };
+            };
+
+            static void toggle(bool on) {
+                for (auto const& hook : main::g_syncHooks) {
+                    if (auto h = hook.lock()) (void)h->toggle(on);
+                };
+            };
+        };
+
         static void restoreOptions(options::HashedMap const& previousStates) {
             if (previousStates.empty()) return;  // idk
 
@@ -29,6 +57,10 @@ namespace cs::brkd::saboteur {
 };
 
 class $modify(SbtHookPlayLayer, PlayLayer) {
+    static void onModify(auto& self) {
+        main::hooks::setup(self);
+    };
+
     struct Fields final {
         ListenerHandle toggles;
 
@@ -154,7 +186,7 @@ class $modify(SbtHookPlayLayer, PlayLayer) {
 
     void setupHasCompleted() {
         PlayLayer::setupHasCompleted();
-        SBT_SETUP_INTERFACE_FUNC_NAME(true);
+        SBT_SETUP_INTERFACE_FUNC_NAME(options::SelfDirector::get()->isSyncEnabled());
     };
 
     void savePreviousStates(int levelId) {
@@ -189,10 +221,13 @@ class $modify(SbtHookPlayLayer, PlayLayer) {
 };
 
 $on_mod(Loaded) {
+    main::hooks::toggle(false);
+
     events::RoomJoin()
         .listen([](bool join) {
             auto setHooks = [](bool on) {
                 if (auto pl = PlayLayer::get()) modify_cast<SbtHookPlayLayer*>(pl)->sbtSetupInterface(on);
+                main::hooks::toggle(on);
             };
 
             auto sd = options::SelfDirector::get();
