@@ -7,6 +7,14 @@
 using namespace geode::prelude;
 using namespace cs::brkd::saboteur;
 
+bool options::isSyncing() noexcept {
+    return SelfDirector::get()->isSyncEnabled();
+};
+
+bool options::shouldAlertSync() {
+    return mod->getSettingValue<bool>("sync-popup");
+};
+
 bool options::isValidForMp(ZStringView id) {
     return (horrible::isSupporter() && mod->getSettingValue<bool>("sync-all")) || str::startsWith(id, ""_spr);
 };
@@ -24,10 +32,18 @@ void options::SelfDirector::setOption(horrible::SharedOption option) {
     m_sbtOpts[option->getIDHash()] = std::move(option);
 };
 
+void options::SelfDirector::enableSync(bool on) {
+    m_syncEnabled = on;
+};
+
 std::span<const horrible::SharedOption> options::SelfDirector::getOptions() const noexcept {
     return m_opts;
 };
 
 horrible::HashedMapU64<horrible::SharedOption> const& options::SelfDirector::getSaboteurOptions() const noexcept {
     return m_sbtOpts;
+};
+
+bool options::SelfDirector::isSyncEnabled() const noexcept {
+    return m_syncEnabled;
 };

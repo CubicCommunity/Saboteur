@@ -39,7 +39,9 @@ arc::Future<> modules::Core::roomPollCheck() {
         m_roomStateID = globed::api::room::getId();
 
         log::info("Player has {} the room{}!", room ? "joined" : "left", room ? fmt::format(" ({})", m_roomStateID) : "");
-        events::RoomJoin().send(room);
+        co_await async::waitForMainThread([room]() {
+            events::RoomJoin().send(room);
+        });
     };
 
     co_return;

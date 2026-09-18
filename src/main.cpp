@@ -15,6 +15,19 @@ $execute {
     auto& core = modules::Core::get();
 };
 
+namespace cs::brkd::saboteur {
+    namespace main {
+        static void restoreOptions(options::HashedMap const& previousStates) {
+            if (previousStates.empty()) return;  // idk
+
+            log::debug("Restoring {} previous Horrible Menu option states", previousStates.size());
+            for (auto const& [id, on] : previousStates) {
+                if (auto om = OptionManager::get()) om->toggleOption(id, on);
+            };
+        };
+    };
+};
+
 class $modify(SbtHookPlayLayer, PlayLayer) {
     struct Fields final {
         ListenerHandle toggles;
@@ -30,10 +43,7 @@ class $modify(SbtHookPlayLayer, PlayLayer) {
                 return;
             };
 
-            log::debug("Restoring {} previous Horrible Menu option states", previousStates.size());
-            for (auto const& [id, on] : previousStates) {
-                if (auto om = OptionManager::get()) om->toggleOption(id, on);
-            };
+            main::restoreOptions(previousStates);
         };
     };
 
@@ -44,16 +54,14 @@ class $modify(SbtHookPlayLayer, PlayLayer) {
             f->sync.destroy();
             f->menu.destroy();
 
+            main::restoreOptions(f->previousStates);
             f->previousStates.clear();
 
             return;
         };
 
         if (!globed::api::room::isInRoom()) {
-            log::warn("{}", (void*)globed::api::table());
-            log::warn("{}", (void*)globed::api::roomTable());
-
-            log::trace("Skipping multiplayer option synchronization for level {}: not in a room", m_level->m_levelID);
+            log::debug("Skipping multiplayer option synchronization for level {}: not in a room", m_level->m_levelID);
             return;
         };
 
@@ -146,12 +154,6 @@ class $modify(SbtHookPlayLayer, PlayLayer) {
 
     void setupHasCompleted() {
         PlayLayer::setupHasCompleted();
-
-        auto res = globed::getRootTable();
-        if (res.isErr()) return log::error("Root table error: {}", res.unwrapErr());
-
-        log::info("{}", (void*)res.unwrap());
-
         SBT_SETUP_INTERFACE_FUNC_NAME(true);
     };
 
@@ -168,7 +170,7 @@ class $modify(SbtHookPlayLayer, PlayLayer) {
     };
 
     void syncOptionsOwner() {
-        auto plrs = globed::api::game::getPlayerIds();
+        auto const plrs = globed::api::game::getPlayerIds();
 
         auto evOpts = globed::EventOptions{};
         evOpts.targetPlayers.reserve(evOpts.targetPlayers.size() - 1);
@@ -184,4 +186,48 @@ class $modify(SbtHookPlayLayer, PlayLayer) {
         log::info("Syncing {} Saboteur option states for all players in level {}", list.size(), m_level->m_levelID);
         events::RoomOptionSync(m_level->m_levelID, std::move(list)).send(std::move(evOpts));
     };
+};
+
+$on_mod(Loaded) {
+    events::RoomJoin()
+        .listen([](bool join) {
+            auto setHooks = [](bool on) {
+                if (auto pl = PlayLayer::get()) modify_cast<SbtHookPlayLayer*>(pl)->sbtSetupInterface(on);
+            };
+
+            auto sd = options::SelfDirector::get();
+
+            if (!join) {
+                log::warn("Disabling Saboteur syncing after player left room");
+
+                setHooks(false);
+                sd->enableSync(false);
+
+                return;
+            };
+
+            auto shouldAlert = options::shouldAlertSync();
+            if (shouldAlert && globed::api::room::isOwner()) {
+                createQuickPopup(
+                    "Saboteur",
+                    "Looks like you <cy>created a room on Globed</c>. Would you like to <co>enable Saboteur features</c> for your room?",
+                    "No",
+                    "Yes",
+                    [sd, hookCb = std::move(setHooks)](auto, bool ok) {
+                        sd->enableSync(ok);
+                        hookCb(ok);
+
+                        if (ok) {
+                            Notification::create(fmt::format("Enabled Saboteur features for Room {}", globed::api::room::getId()), NotificationIcon::Success)->show();
+                            log::info("Saboteur features enabled for room {}", globed::api::room::getId());
+                        };
+                    });
+            } else {
+                if (!shouldAlert) log::warn("Sync confirmation disabled, forcing sync state...");
+
+                sd->enableSync(true);
+                setHooks(true);
+            };
+        })
+        .leak();
 };
