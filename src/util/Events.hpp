@@ -22,8 +22,8 @@ namespace cs::brkd::saboteur {
             RoomOptionSync(int32_t lvlId = 0, std::optional<options::HashedMap> opts = std::nullopt) :
                 levelId(lvlId), options(opts.has_value() ? std::move(opts).value() : options::HashedMap{}) {};
 
-            std::vector<uint8_t> encode() const;
-            static geode::Result<RoomOptionSync> decode(std::span<const uint8_t> data);
+            geode::ByteVector encode() const;
+            static geode::Result<RoomOptionSync> decode(geode::ByteSpan data);
         };
 
         struct RoomLevelPlayer final : geode::Event<RoomLevelPlayer, bool(bool, int), globed::GlobedGJBGL*> {
